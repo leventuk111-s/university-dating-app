@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Dating App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places" defer></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-content">
+                <div class="logo">
+                    <i class="fas fa-heart"></i>
+                    <h1>UniMatch</h1>
+                </div>
+                <div class="loading-spinner"></div>
+                <p>Connecting university hearts...</p>
+            </div>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="logo">
+                        <i class="fas fa-heart"></i>
+                        <h1>UniMatch</h1>
+                    </div>
+                    <p>Find your perfect match at university</p>
+                </div>
+
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <input type="email" id="login-email" placeholder="University Email" required>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+
+                <div class="auth-links">
+                    <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+                    <p><a href="#" id="resend-verification">Resend verification email</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Screen -->
+        <div id="signup-screen" class="screen">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="logo">
+                        <i class="fas fa-heart"></i>
+                        <h1>UniMatch</h1>
+                    </div>
+                    <p>Join your university's dating community</p>
+                </div>
+
+                <form id="signup-form" class="auth-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" id="signup-firstname" placeholder="First Name" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="signup-lastname" placeholder="Last Name" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="email" id="signup-email" placeholder="University Email (@university.edu)" required>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="password" id="signup-password" placeholder="Password (min 6 characters)" required>
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="number" id="signup-age" placeholder="Age" min="18" max="30" required>
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="form-group">
+                            <select id="signup-gender" required>
+                                <option value="">Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="non-binary">Non-binary</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <select id="signup-interested" required>
+                            <option value="">Interested In</option>
+                            <option value="male">Men</option>
+                            <option value="female">Women</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Create Account</button>
+                </form>
+
+                <div class="auth-links">
+                    <p>Already have an account? <a href="#" id="show-login">Sign in</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Setup Screen -->
+        <div id="profile-setup-screen" class="screen">
+            <div class="profile-setup-container">
+                <div class="setup-header">
+                    <h2>Complete Your Profile</h2>
+                    <p>Let others get to know you better</p>
+                </div>
+
+                <form id="profile-setup-form" class="setup-form">
+                    <div class="photo-upload-section">
+                        <h3>Add Photos</h3>
+                        <div class="photo-grid">
+                            <div class="photo-slot main-photo" id="photo-slot-0">
+                                <input type="file" id="photo-input-0" accept="image/*" multiple>
+                                <div class="photo-placeholder">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Main Photo</span>
+                                </div>
+                            </div>
+                            <div class="photo-slot" id="photo-slot-1">
+                                <div class="photo-placeholder">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                            </div>
+                            <div class="photo-slot" id="photo-slot-2">
+                                <div class="photo-placeholder">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Course/Major</label>
+                        <input type="text" id="setup-course" placeholder="e.g., Computer Science">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Year of Study</label>
+                        <select id="setup-year">
+                            <option value="">Select Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                            <option value="5">5th Year</option>
+                            <option value="6">Graduate</option>
+                            <option value="7">PhD</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>About Me</label>
+                        <textarea id="setup-bio" placeholder="Tell others about yourself, your interests, hobbies..." maxlength="500"></textarea>
+                        <div class="char-count">0/500</div>
+                    </div>
+
+                    <div class="location-section">
+                        <h3>Location</h3>
+                        <button type="button" id="get-location-btn" class="btn-secondary">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Share My Location
+                        </button>
+                        <div id="location-status"></div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Complete Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App Screen -->
+        <div id="main-app-screen" class="screen">
+            <!-- Navigation -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-tab="discover">
+                    <i class="fas fa-heart"></i>
+                    <span>Discover</span>
+                </button>
+                <button class="nav-item" data-tab="matches">
+                    <i class="fas fa-comments"></i>
+                    <span>Matches</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </button>
+            </nav>
+
+            <!-- Discover Tab -->
+            <div id="discover-tab" class="tab-content active">
+                <div class="app-header">
+                    <div class="logo-small">
+                        <i class="fas fa-heart"></i>
+                        <span>UniMatch</span>
+                    </div>
+                    <button id="filters-btn" class="icon-btn">
+                        <i class="fas fa-sliders-h"></i>
+                    </button>
+                </div>
+
+                <div class="cards-container">
+                    <div id="no-more-cards" class="no-cards" style="display: none;">
+                        <i class="fas fa-heart-broken"></i>
+                        <h3>No more potential matches</h3>
+                        <p>Check back later for new people!</p>
+                        <button id="refresh-matches" class="btn-primary">Refresh</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="dislike-btn" class="action-btn dislike">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button id="like-btn" class="action-btn like">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Matches Tab -->
+            <div id="matches-tab" class="tab-content">
+                <div class="app-header">
+                    <h2>Your Matches</h2>
+                </div>
+                <div id="matches-list" class="matches-list">
+                    <!-- Matches will be populated here -->
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile-tab" class="tab-content">
+                <div class="app-header">
+                    <h2>Your Profile</h2>
+                    <button id="edit-profile-btn" class="icon-btn">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                <div class="profile-content">
+                    <!-- Profile content will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Screen -->
+        <div id="chat-screen" class="screen">
+            <div class="chat-header">
+                <button id="back-to-matches" class="icon-btn">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="chat-user-info">
+                    <img id="chat-user-avatar" src="" alt="">
+                    <div>
+                        <h3 id="chat-user-name"></h3>
+                        <span id="chat-user-status" class="status"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="chat-messages">
+                <!-- Messages will be populated here -->
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input">
+                    <input type="text" id="message-input" placeholder="Type a message...">
+                    <button id="send-message-btn" class="icon-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Modal -->
+        <div id="match-modal" class="modal">
+            <div class="modal-content match-modal-content">
+                <div class="match-celebration">
+                    <div class="hearts-animation">
+                        <i class="fas fa-heart heart-1"></i>
+                        <i class="fas fa-heart heart-2"></i>
+                        <i class="fas fa-heart heart-3"></i>
+                    </div>
+                    <h2>It's a Match!</h2>
+                    <div class="match-users">
+                        <div class="match-user">
+                            <img id="match-user-1" src="" alt="">
+                        </div>
+                        <div class="match-user">
+                            <img id="match-user-2" src="" alt="">
+                        </div>
+                    </div>
+                    <p>You and <span id="match-user-name"></span> liked each other!</p>
+                    <div class="match-actions">
+                        <button id="send-message-match" class="btn-primary">Send Message</button>
+                        <button id="keep-swiping" class="btn-secondary">Keep Swiping</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Modal -->
+        <div id="filters-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Filters</h3>
+                    <button class="close-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="filter-group">
+                        <label>Age Range</label>
+                        <div class="range-inputs">
+                            <input type="number" id="age-min" min="18" max="30" value="18">
+                            <span>to</span>
+                            <input type="number" id="age-max" min="18" max="30" value="30">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Maximum Distance</label>
+                        <div class="distance-slider">
+                            <input type="range" id="distance-range" min="1" max="100" value="50">
+                            <span id="distance-value">50 km</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="apply-filters" class="btn-primary">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
