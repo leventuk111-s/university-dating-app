@@ -740,6 +740,52 @@ function displayMatches() {
     });
 }
 
+// Profile Functions
+async function loadUserProfile() {
+    try {
+        const response = await api.getCurrentUser();
+        const user = response.user;
+        displayUserProfile(user);
+    } catch (error) {
+        showError('Failed to load profile');
+    }
+}
+
+function displayUserProfile(user) {
+    // Update profile photos
+    const photoGrid = document.getElementById('profile-photo-grid');
+    photoGrid.innerHTML = '';
+    
+    if (user.photos && user.photos.length > 0) {
+        user.photos.forEach((photo, index) => {
+            const photoItem = document.createElement('div');
+            photoItem.className = `profile-photo-item ${photo.isMain ? 'main-photo' : ''}`;
+            
+            const img = document.createElement('img');
+            img.src = photo.url;
+            img.alt = `${user.firstName}'s photo`;
+            
+            photoItem.appendChild(img);
+            photoGrid.appendChild(photoItem);
+        });
+    } else {
+        photoGrid.innerHTML = `
+            <div class="no-photos">
+                <i class="fas fa-camera"></i>
+                <p>No photos uploaded</p>
+            </div>
+        `;
+    }
+    
+    // Update profile information
+    document.getElementById('profile-name').textContent = `${user.firstName} ${user.lastName}`;
+    document.getElementById('profile-age-course').textContent = `${user.age} • ${user.course || 'Course not specified'}`;
+    document.getElementById('profile-bio-text').textContent = user.bio || 'No bio added yet';
+    document.getElementById('profile-course').textContent = user.course || 'Not specified';
+    document.getElementById('profile-year').textContent = user.year ? `Year ${user.year}` : 'Not specified';
+    document.getElementById('profile-university').textContent = user.university || 'Not specified';
+}
+
 async function openChat(user) {
     try {
         const response = await api.getChatWithUser(user._id);
@@ -1001,6 +1047,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (appState.potentialMatches.length === 0) {
                     loadPotentialMatches();
                 }
+            } else if (tab === 'profile') {
+                loadUserProfile();
             }
         });
     });
@@ -1047,6 +1095,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Refresh matches
     document.getElementById('refresh-matches').addEventListener('click', loadPotentialMatches);
+    
+    // Profile handlers
+    document.getElementById('edit-profile-details-btn').addEventListener('click', () => {
+        appState.showScreen('profile-setup-screen');
+    });
+    
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+        try {
+            await api.logout();
+            localStorage.removeItem('token');
+            appState.setUser(null);
+            appState.showScreen('auth-screen');
+            appState.showAuthForm('login');
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Force logout even if API call fails
+            localStorage.removeItem('token');
+            appState.setUser(null);
+            appState.showScreen('auth-screen');
+            appState.showAuthForm('login');
+        }
+    });
     
     // Modal close handlers
     document.querySelectorAll('.close-modal').forEach(btn => {
