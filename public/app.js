@@ -719,12 +719,11 @@ async function handleEmailVerification(token) {
             </style>
         `;
 
-        const response = await fetch('/api/auth/verify-email', {
-            method: 'POST',
+        const response = await fetch(`/api/auth/verify-email?token=${token}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ token })
+            }
         });
 
         const data = await response.json();
@@ -737,7 +736,7 @@ async function handleEmailVerification(token) {
                         <div style="color: #4CAF50; font-size: 60px; margin-bottom: 20px;">✓</div>
                         <h2 style="color: #4CAF50; margin-bottom: 10px;">Email Verified Successfully!</h2>
                         <p style="color: #666; margin-bottom: 30px;">Your account has been verified. You can now log in to your account.</p>
-                        <button onclick="window.location.href='/'" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Go to Login</button>
+                        <button onclick="window.location.href='/';" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Go to Login</button>
                     </div>
                 </div>
             `;
@@ -749,7 +748,7 @@ async function handleEmailVerification(token) {
                         <div style="color: #f44336; font-size: 60px; margin-bottom: 20px;">✗</div>
                         <h2 style="color: #f44336; margin-bottom: 10px;">Verification Failed</h2>
                         <p style="color: #666; margin-bottom: 30px;">${data.message || 'Invalid or expired verification token.'}</p>
-                        <button onclick="window.location.href='/'" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Back to Login</button>
+                        <button onclick="window.location.href='/';" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Back to Login</button>
                     </div>
                 </div>
             `;
@@ -762,7 +761,7 @@ async function handleEmailVerification(token) {
                     <div style="color: #f44336; font-size: 60px; margin-bottom: 20px;">✗</div>
                     <h2 style="color: #f44336; margin-bottom: 10px;">Verification Failed</h2>
                     <p style="color: #666; margin-bottom: 30px;">Something went wrong during verification. Please try again.</p>
-                    <button onclick="window.location.href='/'" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Back to Login</button>
+                    <button onclick="window.location.href='/';" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Back to Login</button>
                 </div>
             </div>
         `;
