@@ -26,7 +26,7 @@ const generateToken = (userId) => {
 
 // Send verification email
 const sendVerificationEmail = async (user, token) => {
-  const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+  const verificationUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
   
   const mailOptions = {
     from: process.env.EMAIL_USER,
