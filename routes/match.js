@@ -120,10 +120,12 @@ router.post('/like/:userId', auth, async (req, res) => {
       message: isMatch ? 'It\'s a match!' : 'User liked successfully',
       isMatch,
       matchedUser: isMatch ? {
-        id: targetUser._id,
+        _id: targetUser._id,
         firstName: targetUser.firstName,
         lastName: targetUser.lastName,
-        photos: targetUser.photos
+        photos: targetUser.photos,
+        isOnline: targetUser.isOnline,
+        lastActive: targetUser.lastActive
       } : null
     });
   } catch (error) {

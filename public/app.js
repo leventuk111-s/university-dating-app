@@ -43,6 +43,29 @@ class AppState {
         document.getElementById(tabId + '-tab').classList.add('active');
         document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
     }
+    
+    showAuthForm(formType) {
+        // Hide all auth forms
+        document.querySelectorAll('.auth-form').forEach(form => {
+            form.classList.remove('active');
+        });
+        
+        // Show specific form
+        const targetForm = document.getElementById(formType + '-form');
+        if (targetForm) {
+            targetForm.classList.add('active');
+        }
+        
+        // Update auth buttons
+        document.querySelectorAll('.auth-toggle').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        const targetBtn = document.querySelector(`[data-form="${formType}"]`);
+        if (targetBtn) {
+            targetBtn.classList.add('active');
+        }
+    }
 }
 
 // API Service
@@ -361,6 +384,9 @@ async function handlePhotoUpload(event) {
     const input = event.target;
     const slot = input.closest('.photo-slot');
     
+    console.log('Photo upload started:', file);
+    console.log('Slot:', slot);
+    
     if (!file || !slot) {
         console.log('No file selected or slot not found');
         return;
@@ -379,7 +405,11 @@ async function handlePhotoUpload(event) {
         const formData = new FormData();
         formData.append('photos', file);
         
+        console.log('Uploading file:', file.name, 'Size:', file.size);
+        
         const response = await api.uploadPhotos(formData);
+        
+        console.log('Upload response:', response);
         
         // Show preview after successful upload
         const reader = new FileReader();
@@ -456,7 +486,7 @@ async function handlePhotoUpload(event) {
         
     } catch (error) {
         console.error('Photo upload error:', error);
-        showError('Failed to upload photo');
+        showError('Failed to upload photo: ' + (error.message || 'Unknown error'));
         
         // Reset slot on error
         const slotId = slot.id;
@@ -797,7 +827,22 @@ function displayUserProfile(user) {
 
 async function openChat(user) {
     try {
-        const response = await api.getChatWithUser(user._id);
+        console.log('Opening chat with user:', user);
+        
+        if (!user || (!user._id && !user.id)) {
+            throw new Error('Invalid user object - missing ID');
+        }
+        
+        // Handle both _id and id formats
+        const userId = user._id || user.id;
+        
+        const response = await api.getChatWithUser(userId);
+        console.log('Chat response:', response);
+        
+        if (!response || !response.chat) {
+            throw new Error('Invalid chat response');
+        }
+        
         appState.currentChatId = response.chat._id;
         
         // Update chat header
@@ -819,7 +864,8 @@ async function openChat(user) {
         
         appState.showScreen('chat-screen');
     } catch (error) {
-        showError('Failed to open chat');
+        console.error('Chat error details:', error);
+        showError('Failed to open chat: ' + (error.message || 'Unknown error'));
     }
 }
 
@@ -1102,10 +1148,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Match modal handlers
-    document.getElementById('send-message-match').addEventListener('click', () => {
+    document.getElementById('send-message-match').addEventListener('click', async () => {
         document.getElementById('match-modal').classList.remove('active');
         if (appState.currentMatch) {
-            openChat(appState.currentMatch);
+            console.log('Current match object:', appState.currentMatch);
+            try {
+                await openChat(appState.currentMatch);
+            } catch (error) {
+                console.error('Error opening chat from match modal:', error);
+                showError('Failed to start conversation');
+            }
+        } else {
+            console.error('No current match available');
+            showError('No match information available');
         }
     });
     
@@ -1124,14 +1179,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logout-btn').addEventListener('click', async () => {
         try {
             await api.logout();
-            localStorage.removeItem('token');
+            appState.setToken(null);
             appState.setUser(null);
             appState.showScreen('auth-screen');
             appState.showAuthForm('login');
         } catch (error) {
             console.error('Logout error:', error);
             // Force logout even if API call fails
-            localStorage.removeItem('token');
+            appState.setToken(null);
             appState.setUser(null);
             appState.showScreen('auth-screen');
             appState.showAuthForm('login');

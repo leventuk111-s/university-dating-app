@@ -14,7 +14,8 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, req.userId + '-' + uniqueSuffix + path.extname(file.originalname));
+    // Use generic filename since req.userId might not be available here
+    cb(null, 'user-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
@@ -98,20 +99,31 @@ router.put('/update', auth, [
 // Upload photos
 router.post('/upload-photos', auth, upload.array('photos', 6), async (req, res) => {
   try {
+    console.log('Photo upload request received');
+    console.log('Files:', req.files);
+    console.log('User ID:', req.userId);
+    
     if (!req.files || req.files.length === 0) {
+      console.log('No files in request');
       return res.status(400).json({ message: 'No photos uploaded' });
     }
 
     const user = await User.findById(req.userId);
     if (!user) {
+      console.log('User not found:', req.userId);
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('Current user photos:', user.photos.length);
+
     // Add new photos
-    const newPhotos = req.files.map((file, index) => ({
-      url: `/uploads/photos/${file.filename}`,
-      isMain: user.photos.length === 0 && index === 0 // First photo is main if no photos exist
-    }));
+    const newPhotos = req.files.map((file, index) => {
+      console.log('Processing file:', file.filename, 'Path:', file.path);
+      return {
+        url: `/uploads/photos/${file.filename}`,
+        isMain: user.photos.length === 0 && index === 0 // First photo is main if no photos exist
+      };
+    });
 
     user.photos.push(...newPhotos);
 
@@ -123,14 +135,37 @@ router.post('/upload-photos', auth, upload.array('photos', 6), async (req, res) 
     user.profileCompleted = user.isProfileComplete();
     await user.save();
 
+    console.log('Photos saved successfully:', user.photos);
+
     res.json({
       message: 'Photos uploaded successfully',
       photos: user.photos
     });
   } catch (error) {
     console.error('Photo upload error:', error);
-    res.status(500).json({ message: 'Server error during photo upload' });
+    res.status(500).json({ message: 'Server error during photo upload', error: error.message });
   }
+});
+
+// Test upload route
+router.post('/test-upload', auth, upload.single('photo'), (req, res) => {
+  console.log('Test upload received');
+  console.log('File:', req.file);
+  console.log('Body:', req.body);
+  
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  
+  res.json({
+    message: 'File uploaded successfully',
+    file: {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      path: req.file.path
+    }
+  });
 });
 
 // Set main photo

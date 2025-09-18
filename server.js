@@ -47,7 +47,8 @@ app.use(helmet({
         "data:", 
         "https://maps.googleapis.com",
         "https://maps.gstatic.com",
-        "https://*.googleusercontent.com"
+        "https://*.googleusercontent.com",
+        "https://university-dating-app.onrender.com"
       ],
       connectSrc: [
         "'self'", 
@@ -81,6 +82,26 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Debug route to check uploads directory
+app.get('/debug/uploads', (req, res) => {
+  const fs = require('fs');
+  const uploadsPath = path.join(__dirname, 'uploads', 'photos');
+  
+  try {
+    const files = fs.readdirSync(uploadsPath);
+    res.json({
+      uploadsPath,
+      files,
+      count: files.length
+    });
+  } catch (error) {
+    res.json({
+      error: error.message,
+      uploadsPath
+    });
+  }
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/university-dating', {
