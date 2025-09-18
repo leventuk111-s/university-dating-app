@@ -698,6 +698,77 @@ async function sendMessage() {
     }
 }
 
+// Email Verification Handler
+async function handleEmailVerification(token) {
+    try {
+        // Show loading state
+        document.body.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+                <div style="text-align: center; padding: 20px;">
+                    <h2 style="color: #e91e63;">Verifying your email...</h2>
+                    <div style="margin: 20px 0;">
+                        <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #e91e63; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    </div>
+                </div>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+
+        const response = await fetch('/api/auth/verify-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Success - show success message and redirect
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+                    <div style="text-align: center; padding: 20px; max-width: 400px;">
+                        <div style="color: #4CAF50; font-size: 60px; margin-bottom: 20px;">✓</div>
+                        <h2 style="color: #4CAF50; margin-bottom: 10px;">Email Verified Successfully!</h2>
+                        <p style="color: #666; margin-bottom: 30px;">Your account has been verified. You can now log in to your account.</p>
+                        <button onclick="window.location.href='/'" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Go to Login</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Error - show error message
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+                    <div style="text-align: center; padding: 20px; max-width: 400px;">
+                        <div style="color: #f44336; font-size: 60px; margin-bottom: 20px;">✗</div>
+                        <h2 style="color: #f44336; margin-bottom: 10px;">Verification Failed</h2>
+                        <p style="color: #666; margin-bottom: 30px;">${data.message || 'Invalid or expired verification token.'}</p>
+                        <button onclick="window.location.href='/'" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Back to Login</button>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+        document.body.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+                <div style="text-align: center; padding: 20px; max-width: 400px;">
+                    <div style="color: #f44336; font-size: 60px; margin-bottom: 20px;">✗</div>
+                    <h2 style="color: #f44336; margin-bottom: 10px;">Verification Failed</h2>
+                    <p style="color: #666; margin-bottom: 30px;">Something went wrong during verification. Please try again.</p>
+                    <button onclick="window.location.href='/'" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Back to Login</button>
+                </div>
+            </div>
+        `;
+    }
+}
+
 // App Initialization
 async function initializeApp() {
     // Check if user is already logged in
@@ -726,6 +797,15 @@ async function initializeApp() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Check for email verification token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const verificationToken = urlParams.get('token');
+    
+    if (verificationToken && window.location.pathname === '/verify-email') {
+        handleEmailVerification(verificationToken);
+        return;
+    }
+    
     // Initialize app after a short delay to show loading screen
     setTimeout(initializeApp, 1500);
     
