@@ -736,10 +736,20 @@ async function handleEmailVerification(token) {
                         <div style="color: #4CAF50; font-size: 60px; margin-bottom: 20px;">✓</div>
                         <h2 style="color: #4CAF50; margin-bottom: 10px;">Email Verified Successfully!</h2>
                         <p style="color: #666; margin-bottom: 30px;">Your account has been verified. You can now log in to your account.</p>
-                        <button onclick="window.location.href='/';" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Go to Login</button>
+                        <button id="go-to-login-btn" style="background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">Go to Login</button>
                     </div>
                 </div>
             `;
+            
+            // Add event listener to the button
+            setTimeout(() => {
+                const loginBtn = document.getElementById('go-to-login-btn');
+                if (loginBtn) {
+                    loginBtn.addEventListener('click', () => {
+                        window.location.href = '/';
+                    });
+                }
+            }, 100);
         } else {
             // Error - show error message
             document.body.innerHTML = `
