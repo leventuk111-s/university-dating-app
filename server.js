@@ -23,7 +23,39 @@ const io = socketIo(server, {
 });
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://maps.googleapis.com",
+        "https://maps.gstatic.com"
+      ],
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://fonts.googleapis.com"
+      ],
+      fontSrc: [
+        "'self'", 
+        "https://fonts.gstatic.com"
+      ],
+      imgSrc: [
+        "'self'", 
+        "data:", 
+        "https://maps.googleapis.com",
+        "https://maps.gstatic.com",
+        "https://*.googleusercontent.com"
+      ],
+      connectSrc: [
+        "'self'", 
+        "https://maps.googleapis.com"
+      ]
+    }
+  }
+}));
 app.use(cors({
   origin: [
     'https://university-dating-app.onrender.com',

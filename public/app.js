@@ -334,16 +334,49 @@ function handlePhotoUpload(event) {
     const files = event.target.files;
     const photoSlots = document.querySelectorAll('.photo-slot');
     
+    if (!files || files.length === 0) {
+        console.log('No files selected');
+        return;
+    }
+    
     Array.from(files).forEach((file, index) => {
         if (index < photoSlots.length) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = document.createElement('img');
                 img.src = e.target.result;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '10px';
                 
                 const slot = photoSlots[index];
-                slot.innerHTML = '';
-                slot.appendChild(img);
+                if (slot) {
+                    slot.innerHTML = '';
+                    slot.appendChild(img);
+                    
+                    // Add remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '×';
+                    removeBtn.className = 'remove-photo-btn';
+                    removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;';
+                    removeBtn.onclick = (e) => {
+                        e.preventDefault();
+                        slot.innerHTML = `
+                            <input type="file" id="photo-input-${index}" accept="image/*" multiple>
+                            <div class="photo-placeholder">
+                                <i class="fas fa-camera"></i>
+                                <span>${index === 0 ? 'Main Photo' : 'Add Photo'}</span>
+                            </div>
+                        `;
+                        // Re-attach event listener
+                        const newInput = slot.querySelector('input');
+                        if (newInput) {
+                            newInput.addEventListener('change', handlePhotoUpload);
+                        }
+                    };
+                    slot.appendChild(removeBtn);
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -834,8 +867,12 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.showScreen('login-screen');
     });
     
-    // Profile setup handlers
-    document.getElementById('photo-input-0').addEventListener('change', handlePhotoUpload);
+    // Profile setup handlers - attach to all photo inputs
+    document.querySelectorAll('[id^="photo-input-"]').forEach(input => {
+        if (input) {
+            input.addEventListener('change', handlePhotoUpload);
+        }
+    });
     document.getElementById('get-location-btn').addEventListener('click', getCurrentLocation);
     
     // Bio character counter
