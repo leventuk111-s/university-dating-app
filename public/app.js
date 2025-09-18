@@ -119,6 +119,13 @@ class ApiService {
         });
     }
 
+    async deletePhoto(photoUrl) {
+        return this.request('/profile/delete-photo', {
+            method: 'DELETE',
+            body: JSON.stringify({ photoUrl })
+        });
+    }
+
     async updateLocation(latitude, longitude) {
         return this.request('/profile/update-location', {
             method: 'PUT',
@@ -332,26 +339,6 @@ async function handleProfileSetup(e) {
 
     try {
         await api.updateProfile(profileData);
-        
-        // Upload photos if any
-        const photoInputs = document.querySelectorAll('[id^="photo-input-"]');
-        const allFiles = [];
-        
-        photoInputs.forEach(input => {
-            if (input && input.files && input.files.length > 0) {
-                Array.from(input.files).forEach(file => {
-                    allFiles.push(file);
-                });
-            }
-        });
-        
-        if (allFiles.length > 0) {
-            const formData = new FormData();
-            allFiles.forEach(file => {
-                formData.append('photos', file);
-            });
-            await api.uploadPhotos(formData);
-        }
 
         // Check if profile is actually complete before proceeding
         const updatedUser = await api.getCurrentUser();
@@ -369,7 +356,7 @@ async function handleProfileSetup(e) {
     }
 }
 
-function handlePhotoUpload(event) {
+async function handlePhotoUpload(event) {
     const file = event.target.files[0]; // Get the first file
     const input = event.target;
     const slot = input.closest('.photo-slot');
@@ -379,51 +366,117 @@ function handlePhotoUpload(event) {
         return;
     }
     
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '10px';
+    // Show loading state
+    slot.innerHTML = `
+        <div class="photo-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Uploading...</span>
+        </div>
+    `;
+    
+    try {
+        // Upload photo immediately
+        const formData = new FormData();
+        formData.append('photos', file);
         
-        // Clear the slot and add the image
-        slot.innerHTML = '';
-        slot.appendChild(img);
+        const response = await api.uploadPhotos(formData);
         
-        // Add remove button
-        const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '×';
-        removeBtn.className = 'remove-photo-btn';
-        removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10;';
-        removeBtn.onclick = (e) => {
-            e.preventDefault();
-            const slotId = slot.id;
-            const inputId = slotId.replace('photo-slot-', 'photo-input-');
-            const isMainPhoto = slot.classList.contains('main-photo');
+        // Show preview after successful upload
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '10px';
             
-            slot.innerHTML = `
-                <input type="file" id="${inputId}" accept="image/*" ${isMainPhoto ? 'multiple' : ''}>
-                <div class="photo-placeholder">
-                    <i class="fas fa-${isMainPhoto ? 'camera' : 'plus'}"></i>
-                    <span>${isMainPhoto ? 'Main Photo' : 'Add Photo'}</span>
-                </div>
-            `;
+            // Clear the slot and add the image
+            slot.innerHTML = '';
+            slot.appendChild(img);
             
-            // Re-attach event listener
-            const newInput = slot.querySelector('input');
-            if (newInput) {
-                newInput.addEventListener('change', handlePhotoUpload);
-            }
+            // Add remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '×';
+            removeBtn.className = 'remove-photo-btn';
+            removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10;';
+            removeBtn.onclick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                try {
+                    // Get the photo URL from the slot dataset
+                    const photoUrl = slot.dataset.photoUrl;
+                    
+                    if (photoUrl) {
+                        await api.deletePhoto(photoUrl);
+                    }
+                    
+                    // Reset the slot
+                    const slotId = slot.id;
+                    const inputId = slotId.replace('photo-slot-', 'photo-input-');
+                    const isMainPhoto = slot.classList.contains('main-photo');
+                    
+                    slot.innerHTML = `
+                        <input type="file" id="${inputId}" accept="image/*" style="display: none;">
+                        <div class="photo-placeholder">
+                            <i class="fas fa-${isMainPhoto ? 'camera' : 'plus'}"></i>
+                            <span>${isMainPhoto ? 'Main Photo' : 'Add Photo'}</span>
+                        </div>
+                    `;
+                    
+                    // Re-attach event listener
+                    const newInput = slot.querySelector('input');
+                    if (newInput) {
+                        newInput.addEventListener('change', handlePhotoUpload);
+                    }
+                    
+                    // Clear slot data
+                    slot.dataset.hasPhoto = 'false';
+                    delete slot.dataset.photoUrl;
+                    
+                    // Update user state
+                    const updatedUser = await api.getCurrentUser();
+                    appState.setUser(updatedUser.user);
+                } catch (error) {
+                    showError('Failed to remove photo');
+                }
+            };
+            slot.appendChild(removeBtn);
+            
+            // Mark slot as having photo
+            slot.dataset.hasPhoto = 'true';
+            slot.dataset.photoUrl = response.photos[response.photos.length - 1].url;
         };
-        slot.appendChild(removeBtn);
+        reader.readAsDataURL(file);
         
-        // Store the file data for later upload
-        slot.dataset.hasPhoto = 'true';
-        slot.dataset.fileName = file.name;
-    };
-    reader.readAsDataURL(file);
+        // Update user state
+        const updatedUser = await api.getCurrentUser();
+        appState.setUser(updatedUser.user);
+        
+    } catch (error) {
+        console.error('Photo upload error:', error);
+        showError('Failed to upload photo');
+        
+        // Reset slot on error
+        const slotId = slot.id;
+        const inputId = slotId.replace('photo-slot-', 'photo-input-');
+        const isMainPhoto = slot.classList.contains('main-photo');
+        
+        slot.innerHTML = `
+            <input type="file" id="${inputId}" accept="image/*" style="display: none;">
+            <div class="photo-placeholder">
+                <i class="fas fa-${isMainPhoto ? 'camera' : 'plus'}"></i>
+                <span>${isMainPhoto ? 'Main Photo' : 'Add Photo'}</span>
+            </div>
+        `;
+        
+        // Re-attach event listener
+        const newInput = slot.querySelector('input');
+        if (newInput) {
+            newInput.addEventListener('change', handlePhotoUpload);
+        }
+    }
 }
 
 async function getCurrentLocation() {

@@ -176,6 +176,7 @@ userSchema.methods.isProfileComplete = function() {
     this.gender &&
     this.interestedIn &&
     this.university &&
+    this.course &&
     this.bio &&
     this.photos.length > 0
   );
