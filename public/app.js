@@ -300,31 +300,70 @@ async function handleSignup(event) {
 }
 
 // Profile Setup Functions
-async function handleProfileSetup(event) {
-    event.preventDefault();
+async function handleProfileSetup(e) {
+    e.preventDefault();
+    
+    // Validate required fields
+    const course = document.getElementById('setup-course').value.trim();
+    const bio = document.getElementById('setup-bio').value.trim();
+    
+    if (!course) {
+        showError('Please enter your course/major.');
+        return;
+    }
+    
+    if (!bio) {
+        showError('Please write something about yourself.');
+        return;
+    }
+    
+    // Check if at least one photo is uploaded
+    const photoSlots = document.querySelectorAll('.photo-slot img');
+    if (photoSlots.length === 0) {
+        showError('Please upload at least one photo.');
+        return;
+    }
     
     const profileData = {
-        course: document.getElementById('setup-course').value,
+        course: course,
         year: document.getElementById('setup-year').value ? parseInt(document.getElementById('setup-year').value) : undefined,
-        bio: document.getElementById('setup-bio').value
+        bio: bio
     };
 
     try {
         await api.updateProfile(profileData);
         
         // Upload photos if any
-        const photoInput = document.getElementById('photo-input-0');
-        if (photoInput.files.length > 0) {
+        const photoInputs = document.querySelectorAll('[id^="photo-input-"]');
+        const allFiles = [];
+        
+        photoInputs.forEach(input => {
+            if (input && input.files && input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    allFiles.push(file);
+                });
+            }
+        });
+        
+        if (allFiles.length > 0) {
             const formData = new FormData();
-            Array.from(photoInput.files).forEach(file => {
+            allFiles.forEach(file => {
                 formData.append('photos', file);
             });
             await api.uploadPhotos(formData);
         }
 
-        showSuccess('Profile completed successfully!');
-        appState.showScreen('main-app-screen');
-        await loadPotentialMatches();
+        // Check if profile is actually complete before proceeding
+        const updatedUser = await api.getCurrentUser();
+        appState.setUser(updatedUser.user);
+        
+        if (updatedUser.user.profileCompleted) {
+            showSuccess('Profile completed successfully!');
+            appState.showScreen('main-app-screen');
+            await loadPotentialMatches();
+        } else {
+            showError('Please complete all required fields including at least one photo to continue.');
+        }
     } catch (error) {
         showError(error.message);
     }
