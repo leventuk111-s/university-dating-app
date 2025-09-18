@@ -318,8 +318,8 @@ async function handleProfileSetup(e) {
     }
     
     // Check if at least one photo is uploaded
-    const photoSlots = document.querySelectorAll('.photo-slot img');
-    if (photoSlots.length === 0) {
+    const photoSlotsWithPhotos = document.querySelectorAll('.photo-slot[data-has-photo="true"]');
+    if (photoSlotsWithPhotos.length === 0) {
         showError('Please upload at least one photo.');
         return;
     }
@@ -370,56 +370,60 @@ async function handleProfileSetup(e) {
 }
 
 function handlePhotoUpload(event) {
-    const files = event.target.files;
-    const photoSlots = document.querySelectorAll('.photo-slot');
+    const file = event.target.files[0]; // Get the first file
+    const input = event.target;
+    const slot = input.closest('.photo-slot');
     
-    if (!files || files.length === 0) {
-        console.log('No files selected');
+    if (!file || !slot) {
+        console.log('No file selected or slot not found');
         return;
     }
     
-    Array.from(files).forEach((file, index) => {
-        if (index < photoSlots.length) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
-                img.style.borderRadius = '10px';
-                
-                const slot = photoSlots[index];
-                if (slot) {
-                    slot.innerHTML = '';
-                    slot.appendChild(img);
-                    
-                    // Add remove button
-                    const removeBtn = document.createElement('button');
-                    removeBtn.innerHTML = '×';
-                    removeBtn.className = 'remove-photo-btn';
-                    removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;';
-                    removeBtn.onclick = (e) => {
-                        e.preventDefault();
-                        slot.innerHTML = `
-                            <input type="file" id="photo-input-${index}" accept="image/*" multiple>
-                            <div class="photo-placeholder">
-                                <i class="fas fa-camera"></i>
-                                <span>${index === 0 ? 'Main Photo' : 'Add Photo'}</span>
-                            </div>
-                        `;
-                        // Re-attach event listener
-                        const newInput = slot.querySelector('input');
-                        if (newInput) {
-                            newInput.addEventListener('change', handlePhotoUpload);
-                        }
-                    };
-                    slot.appendChild(removeBtn);
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '10px';
+        
+        // Clear the slot and add the image
+        slot.innerHTML = '';
+        slot.appendChild(img);
+        
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '×';
+        removeBtn.className = 'remove-photo-btn';
+        removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10;';
+        removeBtn.onclick = (e) => {
+            e.preventDefault();
+            const slotId = slot.id;
+            const inputId = slotId.replace('photo-slot-', 'photo-input-');
+            const isMainPhoto = slot.classList.contains('main-photo');
+            
+            slot.innerHTML = `
+                <input type="file" id="${inputId}" accept="image/*" ${isMainPhoto ? 'multiple' : ''}>
+                <div class="photo-placeholder">
+                    <i class="fas fa-${isMainPhoto ? 'camera' : 'plus'}"></i>
+                    <span>${isMainPhoto ? 'Main Photo' : 'Add Photo'}</span>
+                </div>
+            `;
+            
+            // Re-attach event listener
+            const newInput = slot.querySelector('input');
+            if (newInput) {
+                newInput.addEventListener('change', handlePhotoUpload);
+            }
+        };
+        slot.appendChild(removeBtn);
+        
+        // Store the file data for later upload
+        slot.dataset.hasPhoto = 'true';
+        slot.dataset.fileName = file.name;
+    };
+    reader.readAsDataURL(file);
 }
 
 async function getCurrentLocation() {
@@ -911,6 +915,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) {
             input.addEventListener('change', handlePhotoUpload);
         }
+    });
+    
+    // Also attach to photo slots for click handling
+    document.querySelectorAll('.photo-slot').forEach(slot => {
+        slot.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-photo-btn')) return; // Don't trigger on remove button
+            const input = slot.querySelector('input[type="file"]');
+            if (input) {
+                input.click();
+            }
+        });
     });
     document.getElementById('get-location-btn').addEventListener('click', getCurrentLocation);
     

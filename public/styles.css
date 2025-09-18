@@ -256,10 +256,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
     position: relative;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .photo-slot:hover {
