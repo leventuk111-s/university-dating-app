@@ -619,9 +619,18 @@ function addSwipeListeners(card, user) {
         } else if (currentX < -100) {
             dislikeUser(user, card);
         } else {
-            // Snap back
+            // Snap back and reset all styles
             card.style.transform = '';
             card.style.boxShadow = '';
+            
+            const cardImage = card.querySelector('.card-image');
+            const originalBg = cardImage.style.backgroundImage;
+            cardImage.style.background = originalBg;
+            
+            const overlay = card.querySelector('.swipe-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
         }
         
         currentX = 0;
@@ -951,6 +960,17 @@ async function handleEmailVerification(token) {
             </div>
         `;
     }
+}
+
+function showCardPhoto(cardImage, photos, index, dots) {
+    const photoUrl = photos[index].url;
+    cardImage.style.backgroundImage = `url('${photoUrl}')`;
+    cardImage.dataset.currentPhoto = index;
+    
+    // Update dots
+    dots.forEach((dot, dotIndex) => {
+        dot.classList.toggle('active', dotIndex === index);
+    });
 }
 
 // App Initialization
