@@ -104,7 +104,7 @@ app.get('/debug/uploads', (req, res) => {
 });
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/university-dating';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://leventuk111_db_user:T4dNqZaiO0bHzp0M@cluster0.dzwqxml.mongodb.net/university-dating-app?retryWrites=true&w=majority&appName=Cluster0';
 console.log('🔗 Connecting to MongoDB...');
 console.log('📍 Database type:', MONGODB_URI.includes('mongodb+srv') ? 'MongoDB Atlas (Cloud)' : 'Local MongoDB');
 
@@ -113,21 +113,16 @@ mongoose.connect(MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('✅ Connected to MongoDB successfully');
-  console.log('🗄️ Database ready for connections');
+  console.log('✅ Connected to MongoDB Atlas successfully');
+  console.log('🗄️ Database: university-dating-app');
+  console.log('🌐 Cluster: cluster0.dzwqxml.mongodb.net');
 })
 .catch(err => {
   console.error('❌ MongoDB connection failed:', err.message);
-  if (MONGODB_URI.includes('mongodb+srv')) {
-    console.log('💡 Atlas connection tips:');
-    console.log('   - Check your username/password');
-    console.log('   - Verify network access (0.0.0.0/0)');
-    console.log('   - Ensure cluster is running');
-  } else {
-    console.log('💡 Local MongoDB tips:');
-    console.log('   - Start MongoDB: mongod');
-    console.log('   - Check if MongoDB is running on port 27017');
-  }
+  console.log('💡 Connection troubleshooting:');
+  console.log('   - Verify username/password in connection string');
+  console.log('   - Check network access whitelist (0.0.0.0/0)');
+  console.log('   - Ensure cluster is active and running');
 });
 
 // Routes
