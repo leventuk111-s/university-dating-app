@@ -104,12 +104,31 @@ app.get('/debug/uploads', (req, res) => {
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/university-dating', {
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/university-dating';
+console.log('🔗 Connecting to MongoDB...');
+console.log('📍 Database type:', MONGODB_URI.includes('mongodb+srv') ? 'MongoDB Atlas (Cloud)' : 'Local MongoDB');
+
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => {
+  console.log('✅ Connected to MongoDB successfully');
+  console.log('🗄️ Database ready for connections');
+})
+.catch(err => {
+  console.error('❌ MongoDB connection failed:', err.message);
+  if (MONGODB_URI.includes('mongodb+srv')) {
+    console.log('💡 Atlas connection tips:');
+    console.log('   - Check your username/password');
+    console.log('   - Verify network access (0.0.0.0/0)');
+    console.log('   - Ensure cluster is running');
+  } else {
+    console.log('💡 Local MongoDB tips:');
+    console.log('   - Start MongoDB: mongod');
+    console.log('   - Check if MongoDB is running on port 27017');
+  }
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
