@@ -103,7 +103,7 @@ app.get('/debug/uploads', (req, res) => {
   }
 });
 
-// MongoDB connection
+// MongoDB connection with rate limiting protection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://leventuk111_db_user:T4dNqZaiO0bHzp0M@cluster0.dzwqxml.mongodb.net/university-dating-app?retryWrites=true&w=majority&appName=Cluster0';
 console.log('🔗 Connecting to MongoDB...');
 console.log('📍 Database type:', MONGODB_URI.includes('mongodb+srv') ? 'MongoDB Atlas (Cloud)' : 'Local MongoDB');
@@ -111,18 +111,39 @@ console.log('📍 Database type:', MONGODB_URI.includes('mongodb+srv') ? 'MongoD
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  // Connection pool settings to prevent rate limiting
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  bufferMaxEntries: 0, // Disable mongoose buffering
+  bufferCommands: false, // Disable mongoose buffering
+  // Retry settings
+  retryWrites: true,
+  retryReads: true,
 })
 .then(() => {
   console.log('✅ Connected to MongoDB Atlas successfully');
   console.log('🗄️ Database: university-dating-app');
   console.log('🌐 Cluster: cluster0.dzwqxml.mongodb.net');
+  console.log('🔧 Connection pool configured for rate limit protection');
 })
 .catch(err => {
   console.error('❌ MongoDB connection failed:', err.message);
-  console.log('💡 Connection troubleshooting:');
-  console.log('   - Verify username/password in connection string');
-  console.log('   - Check network access whitelist (0.0.0.0/0)');
-  console.log('   - Ensure cluster is active and running');
+  
+  // Check for specific rate limiting errors
+  if (err.message.includes('too many requests') || err.message.includes('rate limit')) {
+    console.log('🚨 RATE LIMITING DETECTED');
+    console.log('💡 Solutions:');
+    console.log('   - Wait 60 seconds before retrying');
+    console.log('   - Check MongoDB Atlas connection limits');
+    console.log('   - Verify network access configuration');
+    console.log('   - Consider upgrading MongoDB Atlas tier');
+  } else {
+    console.log('💡 Connection troubleshooting:');
+    console.log('   - Verify username/password in connection string');
+    console.log('   - Check network access whitelist (0.0.0.0/0)');
+    console.log('   - Ensure cluster is active and running');
+  }
 });
 
 // Routes
